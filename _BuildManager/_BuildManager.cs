@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
@@ -39,20 +37,20 @@ namespace _BuildManager
 
         private void logVersion()
         {
-            Assembly buildManager = Assembly.GetExecutingAssembly();
-            String location = Path.GetDirectoryName(buildManager.Location);
-            List<AssemblyName> assemblies = AppDomain.CurrentDomain.GetAssemblies()
-                .Where(x => !x.IsDynamic)
-                .Where(x => Path.GetDirectoryName(x.Location) == location)
-                .Select(x => x.GetName()).ToList();
-
-            String versionInfo = "[BLACKRACK_EVE_REDUX] Version Info:\n";
-            foreach (AssemblyName assembly in assemblies)
+            string path = Assembly.GetExecutingAssembly().Location;
+            if (String.IsNullOrEmpty(path)) return;
+            string directory = Path.GetDirectoryName(path);
+            var versionInfo = new StringBuilder("[BLACKRACK_EVE_REDUX] Version Info:\n");
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                versionInfo+=assembly.Name + ", " + assembly.Version.ToString() + "\n";
+                if (assembly.IsDynamic) continue;
+                string candidate = assembly.Location;
+                if (String.IsNullOrEmpty(candidate) || Path.GetDirectoryName(candidate) != directory) continue;
+                AssemblyName name = assembly.GetName();
+                versionInfo.Append(name.Name).Append(", ").Append(name.Version).Append('\n');
             }
 
-            KSPLog.print(versionInfo);
+            KSPLog.print(versionInfo.ToString());
         }
     }
     
